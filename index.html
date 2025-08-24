@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>TheBytePlay — Esports Hub</title>
     <meta name="description" content="TBP Esports Hub — matches, leaderboards, news" />
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='2' y='2' width='60' height='60' rx='14' fill='none' stroke='%237C3AED' stroke-width='4'/%3E%3Cpath d='M18 40V24h12c5.5 0 8.5 3 8.5 8s-3 8-8.5 8H18Zm12-6c2.1 0 3.5-1.2 3.5-3s-1.4-3-3.5-3H24v6h6Z' fill='%237C3AED'/%3E%3Cpath d='M46 24v16h-6V24h6Z' fill='%2306B6D4'/%3E%3C/svg%3E" />
+    <link rel="icon" href="./logo.png" />
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- React 18 UMD + Babel for JSX (no build step needed) -->
+    <!-- React 18 UMD + Babel (so this works as a single file) -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -16,44 +16,39 @@
     <style>
       html, body { height: 100%; background: #0B0F1A; }
       @keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+      .prose p { margin: .5rem 0; }
+      .prose h3 { margin-top: 1rem; font-weight: 700; }
+      .link { color:#67e8f9; }
+      .link:hover { text-decoration: underline; }
     </style>
   </head>
   <body class="min-h-screen text-white">
     <div id="root"></div>
 
-    <!-- Your React app (JSX compiled in browser) -->
     <script type="text/babel">
-      const { useState } = React;
+      const LOGO_URL = "./logo.png"; // your attached logo file
 
-      // TBP gradient logo
-      const TBPLogo = ({ className = "h-8 w-8" }) => (
-        <svg className={className} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="TBP logo">
-          <defs>
-            <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#7C3AED" />
-              <stop offset="100%" stopColor="#06B6D4" />
-            </linearGradient>
-          </defs>
-          <rect x="2" y="2" width="60" height="60" rx="14" stroke="url(#g)" strokeWidth="4" />
-          <path d="M18 40V24h12c5.5 0 8.5 3 8.5 8s-3 8-8.5 8H18Zm12-6c2.1 0 3.5-1.2 3.5-3s-1.4-3-3.5-3H24v6h6Z" fill="url(#g)" />
-          <path d="M46 24v16h-6V24h6Z" fill="url(#g)" />
-        </svg>
-      );
+      // tiny hash router
+      function useHashRoute() {
+        const [route, setRoute] = React.useState(window.location.hash.replace("#","") || "home");
+        React.useEffect(() => {
+          const onHash = () => setRoute(window.location.hash.replace("#","") || "home");
+          window.addEventListener("hashchange", onHash);
+          return () => window.removeEventListener("hashchange", onHash);
+        }, []);
+        return [route, (r) => window.location.hash = r];
+      }
 
+      // helpers
       const Badge = ({ children }) => (
-        <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-white/80">
-          {children}
-        </span>
+        <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-white/80">{children}</span>
       );
-
       const Pill = ({ children }) => (
         <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px]">{children}</span>
       );
-
       const TeamTag = ({ name }) => (
         <span className="rounded-lg bg-white/10 px-2 py-1 text-xs font-semibold">{name}</span>
       );
-
       const StatTile = ({ label, value, sub }) => (
         <div className="rounded-2xl border border-white/10 bg-white/10 p-4">
           <div className="text-[11px] uppercase tracking-wider text-white/60">{label}</div>
@@ -62,28 +57,12 @@
         </div>
       );
 
-      const RadarEmblem = ({ className = "h-24 w-24" }) => (
-        <svg className={className} viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <defs>
-            <radialGradient id="rg" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#06B6D4" stopOpacity="0.35" />
-              <stop offset="100%" stopColor="#7C3AED" stopOpacity="0.05" />
-            </radialGradient>
-          </defs>
-          <circle cx="60" cy="60" r="56" fill="url(#rg)" stroke="#233" strokeOpacity=".4" />
-          <circle cx="60" cy="60" r="40" fill="none" stroke="#7C3AED" strokeOpacity=".25" />
-          <circle cx="60" cy="60" r="24" fill="none" stroke="#06B6D4" strokeOpacity=".35" />
-          <line x1="60" y1="60" x2="105" y2="40" stroke="#06B6D4" strokeOpacity=".8" strokeWidth="2" />
-          <circle cx="105" cy="40" r="3" fill="#06B6D4" />
-        </svg>
-      );
-
+      // demo data
       const matches = [
         { id: 1, game: "Valorant", stage: "Quarterfinal", time: "Today 18:30 IST", a: "TBP Phantoms", b: "Neon Rush", odds: "52/48" },
         { id: 2, game: "BGMI", stage: "Group B", time: "Today 20:00 IST", a: "Desert Wolves", b: "Crimson 5", odds: "60/40" },
         { id: 3, game: "CS2", stage: "Showmatch", time: "Tomorrow 19:15 IST", a: "DustKings", b: "Nuke Ninjas", odds: "55/45" },
       ];
-
       const leaderboard = [
         { pos: 1, team: "TBP Phantoms", pts: 78, w: 25, l: 6 },
         { pos: 2, team: "Neon Rush", pts: 72, w: 23, l: 8 },
@@ -92,56 +71,20 @@
         { pos: 5, team: "Nuke Ninjas", pts: 58, w: 18, l: 13 },
       ];
 
-      const news = [
-        { tag: "Update", title: "TBP adds scrim auto-scoring and anti-smurf checks", time: "2h" },
-        { tag: "Event", title: "Creators Cup S2 registrations are open now", time: "5h" },
-        { tag: "Patch", title: "Valorant map pool changes shake standings", time: "1d" },
-        { tag: "Insight", title: "How teams maximize XP with weekly quests", time: "2d" },
+      // India-esports links (snapshot). Swap this array with your API later.
+      const curatedNews = [
+        { tag: "BGMI", title: "BGMS 2025 Week 1 Day 7 — timings & points table", time: "Today", url: "https://www.sportstiger.com/esports/bgmi/bgms-2025-league-week-1-day-7-match-timings-points-table-groups-map-rotation-and-more", source: "SportsTiger" },
+        { tag: "BGMI", title: "BGMI Masters Series 2025 Day 7 — schedule & livestream", time: "Today", url: "https://www.sportskeeda.com/bgmi/news-bgmi-masters-series-2025-league-day-7-livestream-groups-schedule", source: "Sportskeeda" },
+        { tag: "BGMI", title: "BGMI Challengers Series — Week 1 standings (Versatile leads)", time: "Yesterday/Today", url: "https://www.sportskeeda.com/bgmi/news-bgcs-2025-league-week-1-overall-standings-highlights", source: "Sportskeeda" },
+        { tag: "Valorant", title: "VCL South Asia 2025 — Grand Final details (₹50L)", time: "This month", url: "https://liquipedia.net/valorant/VCL/2025/South_Asia/Grand_Final", source: "Liquipedia" },
+        { tag: "BGMI", title: "Vasista Esports win Skyesports Championship 2025", time: "May 2025", url: "https://www.animationxpress.com/latest-news/vasista-esports-wins-iqoo-neo-10-skyesports-championship-2025-bgmi-tournament/", source: "AnimationXpress" },
       ];
 
-      function App() {
+      // ——— pages ———
+      function Home() {
         return (
-          <div className="min-h-screen bg-[#0B0F1A] text-white">
-            {/* Header */}
-            <header className="sticky top-0 z-40 border-b border-white/5 bg-[#0B0F1A]/80 backdrop-blur">
-              <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-                <div className="flex items-center gap-3">
-                  <TBPLogo />
-                  <div>
-                    <div className="text-lg font-bold tracking-tight">TheBytePlay</div>
-                    <div className="text-[10px] text-white/60">Esports Hub</div>
-                  </div>
-                  <Badge>TBP</Badge>
-                </div>
-                <nav className="hidden items-center gap-6 md:flex">
-                  <a href="#matches" className="text-sm text-white/80 hover:text-white">Matches</a>
-                  <a href="#leaderboard" className="text-sm text-white/80 hover:text-white">Leaderboard</a>
-                  <a href="#insights" className="text-sm text-white/80 hover:text-white">Insights</a>
-                  <a href="#news" className="text-sm text-white/80 hover:text-white">News</a>
-                </nav>
-                <div className="flex items-center gap-2">
-                  <button className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold hover:bg-white/10">Sign in</button>
-                  <button className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-gray-900 hover:-translate-y-0.5">Launch App</button>
-                </div>
-              </div>
-              {/* Ticker */}
-              <div className="border-t border-white/5 bg-black/30">
-                <div className="mx-auto flex max-w-7xl items-center gap-4 overflow-hidden px-4 py-2 text-xs">
-                  <span className="text-cyan-300">●</span>
-                  <div className="flex animate-[marquee_30s_linear_infinite] gap-8 whitespace-nowrap">
-                    {news.map((n, i) => (
-                      <div key={i} className="flex items-center gap-2 text-white/75">
-                        <Pill>{n.tag}</Pill>
-                        <span>{n.title}</span>
-                        <span className="text-white/50">• {n.time}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </header>
-
-            {/* Hero */}
+          <>
+            {/* hero */}
             <section className="relative overflow-hidden">
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(124,58,237,0.25),transparent_55%),radial-gradient(circle_at_80%_0%,rgba(6,182,212,0.25),transparent_55%)]"></div>
               <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 py-10 md:grid-cols-[1.2fr_1fr] md:py-16">
@@ -153,15 +96,11 @@
                     Track matches, <span className="bg-gradient-to-r from-violet-400 to-cyan-300 bg-clip-text text-transparent">win more</span>, grow your club
                   </h1>
                   <p className="mt-3 max-w-2xl text-white/80">
-                    TBP Esports Hub brings live match cards, creator analytics, and gamified leaderboards together. Sample data below — plug your APIs later.
+                    TBP pulls match cards, creator analytics, and gamified leaderboards into one hub. Demo data below — wire to your APIs later.
                   </p>
                   <div className="mt-6 flex flex-wrap gap-3">
-                    <button className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-gray-900 hover:-translate-y-0.5">
-                      🏆 Create Tournament
-                    </button>
-                    <button className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold hover:bg-white/10">
-                      👥 Start a Club
-                    </button>
+                    <a href="#tournaments" className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-gray-900 hover:-translate-y-0.5">🏆 Create Tournament</a>
+                    <a href="#clubs" className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold hover:bg-white/10">👥 Start a Club</a>
                   </div>
                   <div className="mt-8 grid max-w-xl grid-cols-3 gap-3">
                     <StatTile label="Active Series" value="12" sub="across 3 games" />
@@ -174,7 +113,7 @@
                   <div className="absolute -bottom-8 -right-8 -z-10 h-40 w-40 rounded-full bg-cyan-400/30 blur-3xl"></div>
                   <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
                     <div className="flex items-center gap-4">
-                      <RadarEmblem />
+                      <img src={LOGO_URL} alt="TBP logo" className="h-20 w-auto rounded-xl bg-white/5 p-2" />
                       <div>
                         <div className="text-sm text-white/70">Performance index</div>
                         <div className="text-3xl font-bold">73.4</div>
@@ -191,102 +130,324 @@
               </div>
             </section>
 
-            {/* Matches */}
-            <section id="matches" className="mx-auto max-w-7xl px-4 py-10">
+            {/* trending */}
+            <section id="trending" className="mx-auto max-w-7xl px-4 py-10">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-2xl font-bold">Upcoming Matches</h2>
-                <a href="#" className="text-sm text-cyan-300 hover:underline inline-flex items-center">View all →</a>
+                <h2 className="text-2xl font-bold">Trending in India</h2>
+                <a href="#news" className="text-sm text-cyan-300 hover:underline">More →</a>
               </div>
               <div className="grid gap-4 md:grid-cols-3">
-                {matches.map((m) => (
-                  <div key={m.id} className="rounded-2xl border border-white/10 bg-white/10 p-5">
-                    <div className="mb-2 flex items-center justify-between text-xs text-white/70">
-                      <span>{m.game} • {m.stage}</span>
-                      <span>📅 {m.time}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <TeamTag name={m.a} />
-                      <span className="text-white/60 text-xs">vs</span>
-                      <TeamTag name={m.b} />
-                    </div>
-                    <div className="mt-4 flex items-center justify-between text-sm">
-                      <span className="inline-flex items-center gap-1 text-emerald-300">🔥 Odds {m.odds}</span>
-                      <button className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold hover:bg-white/10">Details</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            {/* Leaderboard + Insights */}
-            <section id="leaderboard" className="mx-auto max-w-7xl grid gap-6 px-4 pb-12 md:grid-cols-3">
-              <div className="md:col-span-2">
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-2xl font-bold">Leaderboard — TBP Circuit</h2>
-                  <Badge>✅ Anti-smurf active</Badge>
-                </div>
-                <div className="overflow-hidden rounded-2xl border border-white/10">
-                  <table className="min-w-full divide-y divide-white/10">
-                    <thead className="bg-white/10 text-xs uppercase text-white/70">
-                      <tr>
-                        <th className="px-4 py-2 text-left">Pos</th>
-                        <th className="px-4 py-2 text-left">Team</th>
-                        <th className="px-4 py-2 text-left">Pts</th>
-                        <th className="px-4 py-2 text-left">W</th>
-                        <th className="px-4 py-2 text-left">L</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                      {leaderboard.map((row) => (
-                        <tr key={row.pos} className="hover:bg-white/5">
-                          <td className="px-4 py-3 text-sm text-white/80">{row.pos}</td>
-                          <td className="px-4 py-3 text-sm font-semibold">{row.team}</td>
-                          <td className="px-4 py-3 text-sm">{row.pts}</td>
-                          <td className="px-4 py-3 text-sm">{row.w}</td>
-                          <td className="px-4 py-3 text-sm">{row.l}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              <div id="insights" className="space-y-4">
-                <div className="rounded-2xl border border-white/10 bg-white/10 p-5">
-                  <div className="mb-2 text-sm font-semibold">📈 Momentum</div>
-                  <div className="text-sm text-white/80">Phantoms +12 pts last week • Highest K/D spike</div>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-white/10 p-5">
-                  <div className="mb-2 text-sm font-semibold">⏱️ Upcoming</div>
-                  <div className="text-sm text-white/80">Showmatch tomorrow 19:15 IST • CS2 • Best of 3</div>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-white/10 p-5">
-                  <div className="mb-2 text-sm font-semibold">⭐ MVP Watch</div>
-                  <div className="text-sm text-white/80">Player “Zynx” — 1.34 K/D • 78 ADR • 29% HS</div>
-                </div>
-              </div>
-            </section>
-
-            {/* News */}
-            <section id="news" className="mx-auto max-w-7xl px-4 pb-16">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-2xl font-bold">Latest</h2>
-                <a href="#" className="text-sm text-cyan-300 hover:underline inline-flex items-center">More →</a>
-              </div>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {news.map((n, i) => (
+                {curatedNews.slice(0,3).map((n, i) => (
                   <article key={i} className="rounded-2xl border border-white/10 bg-white/10 p-4">
                     <div className="mb-2 flex items-center justify-between text-xs text-white/70">
-                      <Pill>{n.tag}</Pill>
-                      <span>{n.time}</span>
+                      <Pill>{n.tag}</Pill><span>{n.time}</span>
                     </div>
                     <h3 className="text-sm font-semibold">{n.title}</h3>
-                    <div className="mt-3 inline-flex items-center gap-1 text-xs text-cyan-300">Read →</div>
+                    <a className="mt-3 inline-block text-xs link" href={n.url} target="_blank" rel="noreferrer">Open on {n.source} →</a>
                   </article>
                 ))}
               </div>
             </section>
+          </>
+        );
+      }
 
-            {/* Partners */}
+      function Matches() {
+        return (
+          <section className="mx-auto max-w-7xl px-4 py-10">
+            <h2 className="text-2xl font-bold mb-6">Upcoming Matches</h2>
+            <div className="grid gap-4 md:grid-cols-3">
+              {matches.map((m) => (
+                <div key={m.id} className="rounded-2xl border border-white/10 bg-white/10 p-5">
+                  <div className="mb-2 flex items-center justify-between text-xs text-white/70">
+                    <span>{m.game} • {m.stage}</span>
+                    <span>📅 {m.time}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <TeamTag name={m.a} />
+                    <span className="text-white/60 text-xs">vs</span>
+                    <TeamTag name={m.b} />
+                  </div>
+                  <div className="mt-4 flex items-center justify-between text-sm">
+                    <span className="inline-flex items-center gap-1 text-emerald-300">🔥 Odds {m.odds}</span>
+                    <button className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold hover:bg-white/10">Details</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        );
+      }
+
+      function Leaderboard() {
+        return (
+          <section className="mx-auto max-w-7xl px-4 py-10">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Leaderboard — TBP Circuit</h2>
+              <Badge>✅ Anti-smurf active</Badge>
+            </div>
+            <div className="overflow-hidden rounded-2xl border border-white/10">
+              <table className="min-w-full divide-y divide-white/10">
+                <thead className="bg-white/10 text-xs uppercase text-white/70">
+                  <tr>
+                    <th className="px-4 py-2 text-left">Pos</th>
+                    <th className="px-4 py-2 text-left">Team</th>
+                    <th className="px-4 py-2 text-left">Pts</th>
+                    <th className="px-4 py-2 text-left">W</th>
+                    <th className="px-4 py-2 text-left">L</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {leaderboard.map((row) => (
+                    <tr key={row.pos} className="hover:bg-white/5">
+                      <td className="px-4 py-3 text-sm text-white/80">{row.pos}</td>
+                      <td className="px-4 py-3 text-sm font-semibold">{row.team}</td>
+                      <td className="px-4 py-3 text-sm">{row.pts}</td>
+                      <td className="px-4 py-3 text-sm">{row.w}</td>
+                      <td className="px-4 py-3 text-sm">{row.l}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        );
+      }
+
+      function News() {
+        return (
+          <section className="mx-auto max-w-7xl px-4 py-10">
+            <h2 className="text-2xl font-bold mb-6">India Esports — Latest Headlines</h2>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {curatedNews.map((n, i) => (
+                <article key={i} className="rounded-2xl border border-white/10 bg-white/10 p-4">
+                  <div className="mb-2 flex items-center justify-between text-xs text-white/70">
+                    <Pill>{n.tag}</Pill><span>{n.time}</span>
+                  </div>
+                  <h3 className="text-sm font-semibold">{n.title}</h3>
+                  <a className="mt-3 inline-block text-xs link" href={n.url} target="_blank" rel="noreferrer">
+                    Open on {n.source} →
+                  </a>
+                </article>
+              ))}
+            </div>
+            <p className="mt-4 text-xs text-white/50">
+              These are live links. Replace with your feed/API when ready.
+            </p>
+          </section>
+        );
+      }
+
+      function Tournaments() {
+        return (
+          <section className="mx-auto max-w-7xl px-4 py-10">
+            <h2 className="text-2xl font-bold mb-2">Tournaments (India)</h2>
+            <p className="text-white/80 mb-6">BGMI Masters Series, BGMI Challengers, VCL South Asia, Skyesports Championship.</p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <article className="rounded-2xl border border-white/10 bg-white/10 p-4">
+                <h3 className="font-semibold">BGMI Masters Series 2025</h3>
+                <p className="text-sm text-white/80">League stage ongoing. Daily groups, map rotation, and livestreams available.</p>
+                <a className="text-xs link" href="https://www.sportskeeda.com/bgmi/news-bgmi-masters-series-2025-league-day-7-livestream-groups-schedule" target="_blank" rel="noreferrer">Schedule →</a>
+              </article>
+              <article className="rounded-2xl border border-white/10 bg-white/10 p-4">
+                <h3 className="font-semibold">VCL South Asia 2025</h3>
+                <p className="text-sm text-white/80">Riot/NODWIN’s B-tier VALORANT circuit. Winners qualify for Ascension.</p>
+                <a className="text-xs link" href="https://liquipedia.net/valorant/VCL/2025/South_Asia/Grand_Final" target="_blank" rel="noreferrer">Grand Final →</a>
+              </article>
+              <article className="rounded-2xl border border-white/10 bg-white/10 p-4">
+                <h3 className="font-semibold">Skyesports Championship 2025</h3>
+                <p className="text-sm text-white/80">LAN finale in Bangalore; Vasista Esports clinched BGMI title.</p>
+                <a className="text-xs link" href="https://www.animationxpress.com/latest-news/vasista-esports-wins-iqoo-neo-10-skyesports-championship-2025-bgmi-tournament/" target="_blank" rel="noreferrer">Coverage →</a>
+              </article>
+              <article className="rounded-2xl border border-white/10 bg-white/10 p-4">
+                <h3 className="font-semibold">BGMI Challengers Series</h3>
+                <p className="text-sm text-white/80">National qualifier feeding into Masters Series S4.</p>
+                <a className="text-xs link" href="https://liquipedia.net/pubgmobile/BGMI_Challengers_Series" target="_blank" rel="noreferrer">About →</a>
+              </article>
+            </div>
+          </section>
+        );
+      }
+
+      function Clubs() {
+        return (
+          <section className="mx-auto max-w-7xl px-4 py-10">
+            <h2 className="text-2xl font-bold mb-2">Creator Clubs</h2>
+            <p className="text-white/80 mb-6">Spin up a monetized club with paid access, weekly quests, and coaching slots.</p>
+            <div className="grid gap-4 md:grid-cols-3">
+              {["TBP Phantoms","Neon Rush","Crimson 5"].map((c) => (
+                <div key={c} className="rounded-2xl border border-white/10 bg-white/10 p-5">
+                  <img src={LOGO_URL} alt="" className="h-10 w-auto mb-3 opacity-90" />
+                  <div className="font-semibold">{c}</div>
+                  <div className="text-xs text-white/70">1.4k members • Weekly scrims</div>
+                  <button className="mt-3 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold hover:bg-white/10">View</button>
+                </div>
+              ))}
+            </div>
+          </section>
+        );
+      }
+
+      function Scrims() {
+        return (
+          <section className="mx-auto max-w-7xl px-4 py-10 prose">
+            <h2 className="text-2xl font-bold">Scrims</h2>
+            <p className="text-white/80">Set up practice blocks with India-based teams. Auto-scoring, veto tools, and anti-smurf checks built in.</p>
+            <h3 className="text-lg">How it works</h3>
+            <ul className="list-disc pl-6 text-white/80">
+              <li>Create a scrim lobby and select title (BGMI, Valorant, CS2).</li>
+              <li>Pick best-of format, map pool, and server region (Mumbai/Chennai/Delhi).</li>
+              <li>Share lobby link. Teams join, ready-up, and TBP records results.</li>
+            </ul>
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="rounded-2xl border border-white/10 bg-white/10 p-4">
+                <h4 className="font-semibold">Tonight • 21:00 IST</h4>
+                <p className="text-sm text-white/70">Valorant BO3 • Mumbai • Map veto online</p>
+                <button className="mt-2 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold hover:bg-white/10">Join Lobby</button>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/10 p-4">
+                <h4 className="font-semibold">Tomorrow • 19:30 IST</h4>
+                <p className="text-sm text-white/70">BGMI T3 scrim • Sanhok/Erangel • 16 squads</p>
+                <button className="mt-2 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold hover:bg-white/10">Request Slot</button>
+              </div>
+            </div>
+          </section>
+        );
+      }
+
+      function APIPage() {
+        return (
+          <section className="mx-auto max-w-7xl px-4 py-10 prose">
+            <h2 className="text-2xl font-bold">API & Webhooks</h2>
+            <p className="text-white/80">Pull match cards, standings, and club stats into your app. These are mock endpoints; swap with your backend later.</p>
+            <h3>REST</h3>
+            <pre className="rounded-xl bg-black/40 p-4 overflow-x-auto text-xs"><code>GET https://api.thebyteplay.in/v1/matches?region=IN
+GET https://api.thebyteplay.in/v1/leaderboard?circuit=tbp
+GET https://api.thebyteplay.in/v1/news?country=IN</code></pre>
+            <h3>Webhook Event (sample)</h3>
+            <pre className="rounded-xl bg-black/40 p-4 overflow-x-auto text-xs"><code>{`{ 
+  "type": "match.updated",
+  "data": { "id": "m_123", "score": "13-11", "status": "final" },
+  "ts": 1735152000
+}`}</code></pre>
+            <p className="text-white/60 text-xs">Note: endpoints above are placeholders for demo.</p>
+          </section>
+        );
+      }
+
+      function Terms() {
+        return (
+          <section className="mx-auto max-w-7xl px-4 py-10 prose">
+            <h2 className="text-2xl font-bold">Terms</h2>
+            <p className="text-white/80">By using TheBytePlay you agree to fair-play, lawful use, and basic community etiquette. Do not post illegal content or engage in harassment, cheating, or fraud.</p>
+            <h3>Usage</h3>
+            <ul className="list-disc pl-6 text-white/80">
+              <li>Match and player data is provided “as is” for information only.</li>
+              <li>Commercial use requires written permission.</li>
+              <li>We may limit or suspend accounts that abuse the platform.</li>
+            </ul>
+          </section>
+        );
+      }
+
+      function Privacy() {
+        return (
+          <section className="mx-auto max-w-7xl px-4 py-10 prose">
+            <h2 className="text-2xl font-bold">Privacy</h2>
+            <p className="text-white/80">We store minimal account details to run clubs and tournaments. Cookies are used for session security and analytics.</p>
+            <h3>Data</h3>
+            <ul className="list-disc pl-6 text-white/80">
+              <li>Account: email, display name, club memberships.</li>
+              <li>Gameplay stats you upload or connect via APIs.</li>
+              <li>We don’t sell personal data. You can request deletion anytime.</li>
+            </ul>
+          </section>
+        );
+      }
+
+      function Community() {
+        return (
+          <section className="mx-auto max-w-7xl px-4 py-10 prose">
+            <h2 className="text-2xl font-bold">Community Guidelines</h2>
+            <p className="text-white/80">Keep it competitive, not toxic. Respect players, staff, and creators.</p>
+            <ul className="list-disc pl-6 text-white/80">
+              <li>No hate speech, slurs, doxxing, or targeted harassment.</li>
+              <li>No cheating, smurfing in restricted ladders, or match fixing.</li>
+              <li>Use proper team tags and sponsor disclosures in events.</li>
+            </ul>
+          </section>
+        );
+      }
+
+      // layout
+      function App() {
+        const [route] = useHashRoute();
+        const NavLink = ({ to, children }) => (
+          <a href={`#${to}`} className="text-sm text-white/80 hover:text-white">{children}</a>
+        );
+
+        return (
+          <div className="min-h-screen bg-[#0B0F1A] text-white">
+            {/* header */}
+            <header className="sticky top-0 z-40 border-b border-white/5 bg-[#0B0F1A]/80 backdrop-blur">
+              <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <img src={LOGO_URL} className="h-8 w-auto" alt="TheBytePlay logo" />
+                  <div>
+                    <div className="text-lg font-bold tracking-tight">TheBytePlay</div>
+                    <div className="text-[10px] text-white/60">Esports Hub</div>
+                  </div>
+                  <Badge>TBP</Badge>
+                </div>
+                <nav className="hidden items-center gap-6 md:flex">
+                  <NavLink to="home">Home</NavLink>
+                  <NavLink to="matches">Matches</NavLink>
+                  <NavLink to="leaderboard">Leaderboard</NavLink>
+                  <NavLink to "scrims">Scrims</NavLink>
+                  <NavLink to="tournaments">Tournaments</NavLink>
+                  <NavLink to="news">News</NavLink>
+                  <NavLink to="clubs">Clubs</NavLink>
+                  <NavLink to="api">API</NavLink>
+                </nav>
+                <div className="flex items-center gap-2">
+                  <a href="#news" className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold hover:bg-white/10">India</a>
+                  <a href="#tournaments" className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-gray-900 hover:-translate-y-0.5">Launch App</a>
+                </div>
+              </div>
+
+              {/* ticker */}
+              <div className="border-t border-white/5 bg-black/30">
+                <div className="mx-auto flex max-w-7xl items-center gap-4 overflow-hidden px-4 py-2 text-xs">
+                  <span className="text-cyan-300">●</span>
+                  <div className="flex animate-[marquee_30s_linear_infinite] gap-8 whitespace-nowrap">
+                    {curatedNews.map((n, i) => (
+                      <div key={i} className="flex items-center gap-2 text-white/75">
+                        <Pill>{n.tag}</Pill>
+                        <a className="hover:underline" href={n.url} target="_blank" rel="noreferrer">{n.title}</a>
+                        <span className="text-white/50">• {n.time}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </header>
+
+            {/* router view */}
+            <main>
+              {route === "home" && <Home />}
+              {route === "matches" && <Matches />}
+              {route === "leaderboard" && <Leaderboard />}
+              {route === "scrims" && <Scrims />}
+              {route === "tournaments" && <Tournaments />}
+              {route === "news" && <News />}
+              {route === "clubs" && <Clubs />}
+              {route === "api" && <APIPage />}
+              {route === "terms" && <Terms />}
+              {route === "privacy" && <Privacy />}
+              {route === "community" && <Community />}
+            </main>
+
+            {/* partners */}
             <section className="border-t border-white/5 bg-white/5">
               <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-10 px-4 py-8 opacity-80">
                 {["Valorant","BGMI","CS2","Dota 2","Free Fire"].map((g)=> (
@@ -295,35 +456,37 @@
               </div>
             </section>
 
-            {/* Footer */}
+            {/* footer */}
             <footer className="border-t border-white/5">
               <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 md:grid-cols-4">
                 <div>
-                  <div className="mb-3 flex items-center gap-2"><TBPLogo /><span className="font-semibold">TheBytePlay</span></div>
+                  <div className="mb-3 flex items-center gap-2"><img src={LOGO_URL} className="h-8 w-auto" alt=""/> <span className="font-semibold">TheBytePlay</span></div>
                   <p className="text-sm text-white/70">Esports analytics, clubs, and tournaments — in one hub.</p>
                 </div>
                 <div>
                   <div className="mb-2 text-sm font-semibold">Explore</div>
                   <ul className="space-y-1 text-sm text-white/70">
+                    <li><a href="#home" className="hover:text-white">Home</a></li>
                     <li><a href="#matches" className="hover:text-white">Matches</a></li>
                     <li><a href="#leaderboard" className="hover:text-white">Leaderboard</a></li>
                     <li><a href="#news" className="hover:text-white">News</a></li>
+                    <li><a href="#tournaments" className="hover:text-white">Tournaments</a></li>
                   </ul>
                 </div>
                 <div>
                   <div className="mb-2 text-sm font-semibold">For Teams</div>
                   <ul className="space-y-1 text-sm text-white/70">
-                    <li>Tournaments</li>
-                    <li>Scrims</li>
-                    <li>API & Webhooks</li>
+                    <li><a href="#scrims" className="hover:text-white">Scrims</a></li>
+                    <li><a href="#clubs" className="hover:text-white">Clubs</a></li>
+                    <li><a href="#api" className="hover:text-white">API & Webhooks</a></li>
                   </ul>
                 </div>
                 <div>
                   <div className="mb-2 text-sm font-semibold">Legal</div>
                   <ul className="space-y-1 text-sm text-white/70">
-                    <li>Terms</li>
-                    <li>Privacy</li>
-                    <li>Community</li>
+                    <li><a href="#terms" className="hover:text-white">Terms</a></li>
+                    <li><a href="#privacy" className="hover:text-white">Privacy</a></li>
+                    <li><a href="#community" className="hover:text-white">Community</a></li>
                   </ul>
                 </div>
               </div>
