@@ -1,132 +1,340 @@
-import React from "react";
-import {
-  Trophy,
-  Radio,
-  Gamepad2,
-  Users2,
-  ChevronRight,
-  Flame,
-  ShieldCheck,
-  Star,
-  Timer,
-  LineChart,
-  CalendarDays,
-} from "lucide-react";
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TheBytePlay — Esports Hub</title>
+    <meta name="description" content="TBP Esports Hub — matches, leaderboards, news" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='2' y='2' width='60' height='60' rx='14' fill='none' stroke='%237C3AED' stroke-width='4'/%3E%3Cpath d='M18 40V24h12c5.5 0 8.5 3 8.5 8s-3 8-8.5 8H18Zm12-6c2.1 0 3.5-1.2 3.5-3s-1.4-3-3.5-3H24v6h6Z' fill='%237C3AED'/%3E%3Cpath d='M46 24v16h-6V24h6Z' fill='%2306B6D4'/%3E%3C/svg%3E" />
+    <script src="https://cdn.tailwindcss.com"></script>
 
-// Inline TBP Logo
-const TBPLogo = ({ className = "h-8 w-8" }: { className?: string }) => (
-  <svg
-    className={className}
-    viewBox="0 0 64 64"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <defs>
-      <linearGradient id="tbp-g" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#7C3AED" />
-        <stop offset="100%" stopColor="#06B6D4" />
-      </linearGradient>
-    </defs>
-    <rect
-      x="2"
-      y="2"
-      width="60"
-      height="60"
-      rx="14"
-      stroke="url(#tbp-g)"
-      strokeWidth="4"
-    />
-    <path
-      d="M18 40V24h12c5.5 0 8.5 3 8.5 8s-3 8-8.5 8H18Zm12-6c2.1 0 3.5-1.2 3.5-3s-1.4-3-3.5-3H24v6h6Z"
-      fill="url(#tbp-g)"
-    />
-    <path d="M46 24v16h-6V24h6Z" fill="url(#tbp-g)" />
-  </svg>
-);
+    <!-- React 18 UMD + Babel for JSX (no build step needed) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-// Simple UI helpers
-const Badge = ({ children }: { children: React.ReactNode }) => (
-  <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-white/80">
-    {children}
-  </span>
-);
+    <style>
+      html, body { height: 100%; background: #0B0F1A; }
+      @keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+    </style>
+  </head>
+  <body class="min-h-screen text-white">
+    <div id="root"></div>
 
-const TeamTag = ({ name }: { name: string }) => (
-  <span className="rounded-lg bg-white/10 px-2 py-1 text-xs font-semibold">
-    {name}
-  </span>
-);
+    <!-- Your React app (JSX compiled in browser) -->
+    <script type="text/babel">
+      const { useState } = React;
 
-// Dummy data
-const matches = [
-  {
-    id: 1,
-    game: "Valorant",
-    stage: "Quarterfinal",
-    time: "Today 18:30 IST",
-    a: "TBP Phantoms",
-    b: "Neon Rush",
-    odds: "52/48",
-  },
-  {
-    id: 2,
-    game: "BGMI",
-    stage: "Group B",
-    time: "Today 20:00 IST",
-    a: "Desert Wolves",
-    b: "Crimson 5",
-    odds: "60/40",
-  },
-];
+      // TBP gradient logo
+      const TBPLogo = ({ className = "h-8 w-8" }) => (
+        <svg className={className} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="TBP logo">
+          <defs>
+            <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#7C3AED" />
+              <stop offset="100%" stopColor="#06B6D4" />
+            </linearGradient>
+          </defs>
+          <rect x="2" y="2" width="60" height="60" rx="14" stroke="url(#g)" strokeWidth="4" />
+          <path d="M18 40V24h12c5.5 0 8.5 3 8.5 8s-3 8-8.5 8H18Zm12-6c2.1 0 3.5-1.2 3.5-3s-1.4-3-3.5-3H24v6h6Z" fill="url(#g)" />
+          <path d="M46 24v16h-6V24h6Z" fill="url(#g)" />
+        </svg>
+      );
 
-export default function App() {
-  return (
-    <div className="min-h-screen bg-[#0B0F1A] text-white">
-      {/* Header */}
-      <header className="sticky top-0 border-b border-white/5 bg-[#0B0F1A]/80 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <TBPLogo />
-            <span className="font-bold">TheBytePlay</span>
-            <Badge>TBP</Badge>
-          </div>
-          <nav className="hidden md:flex gap-6 text-sm text-white/80">
-            <a href="#matches" className="hover:text-white">
-              Matches
-            </a>
-            <a href="#leaderboard" className="hover:text-white">
-              Leaderboard
-            </a>
-          </nav>
+      const Badge = ({ children }) => (
+        <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-white/80">
+          {children}
+        </span>
+      );
+
+      const Pill = ({ children }) => (
+        <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px]">{children}</span>
+      );
+
+      const TeamTag = ({ name }) => (
+        <span className="rounded-lg bg-white/10 px-2 py-1 text-xs font-semibold">{name}</span>
+      );
+
+      const StatTile = ({ label, value, sub }) => (
+        <div className="rounded-2xl border border-white/10 bg-white/10 p-4">
+          <div className="text-[11px] uppercase tracking-wider text-white/60">{label}</div>
+          <div className="mt-1 text-2xl font-bold">{value}</div>
+          {sub ? <div className="mt-0.5 text-xs text-white/60">{sub}</div> : null}
         </div>
-      </header>
+      );
 
-      {/* Matches Section */}
-      <section id="matches" className="mx-auto max-w-7xl px-4 py-10">
-        <h2 className="text-2xl font-bold mb-6">Upcoming Matches</h2>
-        <div className="grid gap-4 md:grid-cols-2">
-          {matches.map((m) => (
-            <div
-              key={m.id}
-              className="rounded-xl border border-white/10 bg-white/5 p-4"
-            >
-              <div className="flex justify-between text-xs text-white/60 mb-2">
-                <span>
-                  {m.game} • {m.stage}
-                </span>
-                <span className="flex items-center gap-1">
-                  <CalendarDays className="h-3.5 w-3.5" /> {m.time}
-                </span>
+      const RadarEmblem = ({ className = "h-24 w-24" }) => (
+        <svg className={className} viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <radialGradient id="rg" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#06B6D4" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="#7C3AED" stopOpacity="0.05" />
+            </radialGradient>
+          </defs>
+          <circle cx="60" cy="60" r="56" fill="url(#rg)" stroke="#233" strokeOpacity=".4" />
+          <circle cx="60" cy="60" r="40" fill="none" stroke="#7C3AED" strokeOpacity=".25" />
+          <circle cx="60" cy="60" r="24" fill="none" stroke="#06B6D4" strokeOpacity=".35" />
+          <line x1="60" y1="60" x2="105" y2="40" stroke="#06B6D4" strokeOpacity=".8" strokeWidth="2" />
+          <circle cx="105" cy="40" r="3" fill="#06B6D4" />
+        </svg>
+      );
+
+      const matches = [
+        { id: 1, game: "Valorant", stage: "Quarterfinal", time: "Today 18:30 IST", a: "TBP Phantoms", b: "Neon Rush", odds: "52/48" },
+        { id: 2, game: "BGMI", stage: "Group B", time: "Today 20:00 IST", a: "Desert Wolves", b: "Crimson 5", odds: "60/40" },
+        { id: 3, game: "CS2", stage: "Showmatch", time: "Tomorrow 19:15 IST", a: "DustKings", b: "Nuke Ninjas", odds: "55/45" },
+      ];
+
+      const leaderboard = [
+        { pos: 1, team: "TBP Phantoms", pts: 78, w: 25, l: 6 },
+        { pos: 2, team: "Neon Rush", pts: 72, w: 23, l: 8 },
+        { pos: 3, team: "Crimson 5", pts: 66, w: 21, l: 10 },
+        { pos: 4, team: "Desert Wolves", pts: 64, w: 20, l: 11 },
+        { pos: 5, team: "Nuke Ninjas", pts: 58, w: 18, l: 13 },
+      ];
+
+      const news = [
+        { tag: "Update", title: "TBP adds scrim auto-scoring and anti-smurf checks", time: "2h" },
+        { tag: "Event", title: "Creators Cup S2 registrations are open now", time: "5h" },
+        { tag: "Patch", title: "Valorant map pool changes shake standings", time: "1d" },
+        { tag: "Insight", title: "How teams maximize XP with weekly quests", time: "2d" },
+      ];
+
+      function App() {
+        return (
+          <div className="min-h-screen bg-[#0B0F1A] text-white">
+            {/* Header */}
+            <header className="sticky top-0 z-40 border-b border-white/5 bg-[#0B0F1A]/80 backdrop-blur">
+              <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <TBPLogo />
+                  <div>
+                    <div className="text-lg font-bold tracking-tight">TheBytePlay</div>
+                    <div className="text-[10px] text-white/60">Esports Hub</div>
+                  </div>
+                  <Badge>TBP</Badge>
+                </div>
+                <nav className="hidden items-center gap-6 md:flex">
+                  <a href="#matches" className="text-sm text-white/80 hover:text-white">Matches</a>
+                  <a href="#leaderboard" className="text-sm text-white/80 hover:text-white">Leaderboard</a>
+                  <a href="#insights" className="text-sm text-white/80 hover:text-white">Insights</a>
+                  <a href="#news" className="text-sm text-white/80 hover:text-white">News</a>
+                </nav>
+                <div className="flex items-center gap-2">
+                  <button className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold hover:bg-white/10">Sign in</button>
+                  <button className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-gray-900 hover:-translate-y-0.5">Launch App</button>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <TeamTag name={m.a} />
-                <span className="text-xs text-white/50">vs</span>
-                <TeamTag name={m.b} />
+              {/* Ticker */}
+              <div className="border-t border-white/5 bg-black/30">
+                <div className="mx-auto flex max-w-7xl items-center gap-4 overflow-hidden px-4 py-2 text-xs">
+                  <span className="text-cyan-300">●</span>
+                  <div className="flex animate-[marquee_30s_linear_infinite] gap-8 whitespace-nowrap">
+                    {news.map((n, i) => (
+                      <div key={i} className="flex items-center gap-2 text-white/75">
+                        <Pill>{n.tag}</Pill>
+                        <span>{n.title}</span>
+                        <span className="text-white/50">• {n.time}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <div className="mt-3 flex justify-between text-sm">
-                <span className="flex items-center gap-1 text-emerald-300">
-                  <Flame className="h-4 w-4" /> Odds {m.odds}
-                </span>
-                <button className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-semibold hover:bg-white/10">
-                  Details
-                </button>
+            </header>
+
+            {/* Hero */}
+            <section className="relative overflow-hidden">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(124,58,237,0.25),transparent_55%),radial-gradient(circle_at_80%_0%,rgba(6,182,212,0.25),transparent_55%)]"></div>
+              <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 py-10 md:grid-cols-[1.2fr_1fr] md:py-16">
+                <div>
+                  <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-white/80">
+                    <span className="text-cyan-300">◆</span> Live stats, odds & scrims in one place
+                  </div>
+                  <h1 className="text-4xl font-extrabold leading-tight md:text-5xl">
+                    Track matches, <span className="bg-gradient-to-r from-violet-400 to-cyan-300 bg-clip-text text-transparent">win more</span>, grow your club
+                  </h1>
+                  <p className="mt-3 max-w-2xl text-white/80">
+                    TBP Esports Hub brings live match cards, creator analytics, and gamified leaderboards together. Sample data below — plug your APIs later.
+                  </p>
+                  <div className="mt-6 flex flex-wrap gap-3">
+                    <button className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-gray-900 hover:-translate-y-0.5">
+                      🏆 Create Tournament
+                    </button>
+                    <button className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold hover:bg-white/10">
+                      👥 Start a Club
+                    </button>
+                  </div>
+                  <div className="mt-8 grid max-w-xl grid-cols-3 gap-3">
+                    <StatTile label="Active Series" value="12" sub="across 3 games" />
+                    <StatTile label="Avg. Latency" value="<50ms" sub="chat/voice" />
+                    <StatTile label="Uptime" value="99.9%" sub="last 90 days" />
+                  </div>
+                </div>
+                <div className="relative">
+                  <div className="absolute -left-8 -top-8 -z-10 h-40 w-40 rounded-full bg-violet-500/30 blur-3xl"></div>
+                  <div className="absolute -bottom-8 -right-8 -z-10 h-40 w-40 rounded-full bg-cyan-400/30 blur-3xl"></div>
+                  <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+                    <div className="flex items-center gap-4">
+                      <RadarEmblem />
+                      <div>
+                        <div className="text-sm text-white/70">Performance index</div>
+                        <div className="text-3xl font-bold">73.4</div>
+                        <div className="mt-1 text-xs text-white/60">Phantoms (last 10 games)</div>
+                      </div>
+                    </div>
+                    <div className="mt-6 grid grid-cols-3 gap-3">
+                      <StatTile label="Winrate" value="68%" />
+                      <StatTile label="K/D" value="1.24" />
+                      <StatTile label="Clutch" value="19%" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Matches */}
+            <section id="matches" className="mx-auto max-w-7xl px-4 py-10">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-2xl font-bold">Upcoming Matches</h2>
+                <a href="#" className="text-sm text-cyan-300 hover:underline inline-flex items-center">View all →</a>
+              </div>
+              <div className="grid gap-4 md:grid-cols-3">
+                {matches.map((m) => (
+                  <div key={m.id} className="rounded-2xl border border-white/10 bg-white/10 p-5">
+                    <div className="mb-2 flex items-center justify-between text-xs text-white/70">
+                      <span>{m.game} • {m.stage}</span>
+                      <span>📅 {m.time}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <TeamTag name={m.a} />
+                      <span className="text-white/60 text-xs">vs</span>
+                      <TeamTag name={m.b} />
+                    </div>
+                    <div className="mt-4 flex items-center justify-between text-sm">
+                      <span className="inline-flex items-center gap-1 text-emerald-300">🔥 Odds {m.odds}</span>
+                      <button className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold hover:bg-white/10">Details</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Leaderboard + Insights */}
+            <section id="leaderboard" className="mx-auto max-w-7xl grid gap-6 px-4 pb-12 md:grid-cols-3">
+              <div className="md:col-span-2">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-2xl font-bold">Leaderboard — TBP Circuit</h2>
+                  <Badge>✅ Anti-smurf active</Badge>
+                </div>
+                <div className="overflow-hidden rounded-2xl border border-white/10">
+                  <table className="min-w-full divide-y divide-white/10">
+                    <thead className="bg-white/10 text-xs uppercase text-white/70">
+                      <tr>
+                        <th className="px-4 py-2 text-left">Pos</th>
+                        <th className="px-4 py-2 text-left">Team</th>
+                        <th className="px-4 py-2 text-left">Pts</th>
+                        <th className="px-4 py-2 text-left">W</th>
+                        <th className="px-4 py-2 text-left">L</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {leaderboard.map((row) => (
+                        <tr key={row.pos} className="hover:bg-white/5">
+                          <td className="px-4 py-3 text-sm text-white/80">{row.pos}</td>
+                          <td className="px-4 py-3 text-sm font-semibold">{row.team}</td>
+                          <td className="px-4 py-3 text-sm">{row.pts}</td>
+                          <td className="px-4 py-3 text-sm">{row.w}</td>
+                          <td className="px-4 py-3 text-sm">{row.l}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div id="insights" className="space-y-4">
+                <div className="rounded-2xl border border-white/10 bg-white/10 p-5">
+                  <div className="mb-2 text-sm font-semibold">📈 Momentum</div>
+                  <div className="text-sm text-white/80">Phantoms +12 pts last week • Highest K/D spike</div>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/10 p-5">
+                  <div className="mb-2 text-sm font-semibold">⏱️ Upcoming</div>
+                  <div className="text-sm text-white/80">Showmatch tomorrow 19:15 IST • CS2 • Best of 3</div>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/10 p-5">
+                  <div className="mb-2 text-sm font-semibold">⭐ MVP Watch</div>
+                  <div className="text-sm text-white/80">Player “Zynx” — 1.34 K/D • 78 ADR • 29% HS</div>
+                </div>
+              </div>
+            </section>
+
+            {/* News */}
+            <section id="news" className="mx-auto max-w-7xl px-4 pb-16">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-2xl font-bold">Latest</h2>
+                <a href="#" className="text-sm text-cyan-300 hover:underline inline-flex items-center">More →</a>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {news.map((n, i) => (
+                  <article key={i} className="rounded-2xl border border-white/10 bg-white/10 p-4">
+                    <div className="mb-2 flex items-center justify-between text-xs text-white/70">
+                      <Pill>{n.tag}</Pill>
+                      <span>{n.time}</span>
+                    </div>
+                    <h3 className="text-sm font-semibold">{n.title}</h3>
+                    <div className="mt-3 inline-flex items-center gap-1 text-xs text-cyan-300">Read →</div>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            {/* Partners */}
+            <section className="border-t border-white/5 bg-white/5">
+              <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-10 px-4 py-8 opacity-80">
+                {["Valorant","BGMI","CS2","Dota 2","Free Fire"].map((g)=> (
+                  <div key={g} className="text-xs tracking-widest text-white/70">SUPPORTED: {g}</div>
+                ))}
+              </div>
+            </section>
+
+            {/* Footer */}
+            <footer className="border-t border-white/5">
+              <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 md:grid-cols-4">
+                <div>
+                  <div className="mb-3 flex items-center gap-2"><TBPLogo /><span className="font-semibold">TheBytePlay</span></div>
+                  <p className="text-sm text-white/70">Esports analytics, clubs, and tournaments — in one hub.</p>
+                </div>
+                <div>
+                  <div className="mb-2 text-sm font-semibold">Explore</div>
+                  <ul className="space-y-1 text-sm text-white/70">
+                    <li><a href="#matches" className="hover:text-white">Matches</a></li>
+                    <li><a href="#leaderboard" className="hover:text-white">Leaderboard</a></li>
+                    <li><a href="#news" className="hover:text-white">News</a></li>
+                  </ul>
+                </div>
+                <div>
+                  <div className="mb-2 text-sm font-semibold">For Teams</div>
+                  <ul className="space-y-1 text-sm text-white/70">
+                    <li>Tournaments</li>
+                    <li>Scrims</li>
+                    <li>API & Webhooks</li>
+                  </ul>
+                </div>
+                <div>
+                  <div className="mb-2 text-sm font-semibold">Legal</div>
+                  <ul className="space-y-1 text-sm text-white/70">
+                    <li>Terms</li>
+                    <li>Privacy</li>
+                    <li>Community</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="border-t border-white/5 py-4 text-center text-xs text-white/60">© <span id="y"></span> TheBytePlay. All rights reserved.</div>
+            </footer>
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+      document.getElementById('y').textContent = new Date().getFullYear();
+    </script>
+  </body>
+</html>
