@@ -8,7 +8,7 @@
     <link rel="icon" href="./logo.png" />
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- React 18 UMD + Babel (so this works as a single file) -->
+    <!-- React 18 UMD + Babel (JSX compiled in browser) -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -16,8 +16,6 @@
     <style>
       html, body { height: 100%; background: #0B0F1A; }
       @keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
-      .prose p { margin: .5rem 0; }
-      .prose h3 { margin-top: 1rem; font-weight: 700; }
       .link { color:#67e8f9; }
       .link:hover { text-decoration: underline; }
     </style>
@@ -26,20 +24,22 @@
     <div id="root"></div>
 
     <script type="text/babel">
-      const LOGO_URL = "./logo.png"; // your attached logo file
+      const LOGO_URL = "./logo.png"; // your logo file
 
-      // tiny hash router
+      // -------- tiny hash router --------
       function useHashRoute() {
-        const [route, setRoute] = React.useState(window.location.hash.replace("#","") || "home");
+        const [route, setRoute] = React.useState(
+          window.location.hash.replace("#","") || "home"
+        );
         React.useEffect(() => {
           const onHash = () => setRoute(window.location.hash.replace("#","") || "home");
           window.addEventListener("hashchange", onHash);
           return () => window.removeEventListener("hashchange", onHash);
         }, []);
-        return [route, (r) => window.location.hash = r];
+        return route;
       }
 
-      // helpers
+      // -------- UI helpers --------
       const Badge = ({ children }) => (
         <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-white/80">{children}</span>
       );
@@ -56,8 +56,11 @@
           {sub ? <div className="mt-0.5 text-xs text-white/60">{sub}</div> : null}
         </div>
       );
+      const NavLink = ({ to, children }) => (
+        <a href={`#${to}`} className="text-sm text-white/80 hover:text-white">{children}</a>
+      );
 
-      // demo data
+      // -------- sample data --------
       const matches = [
         { id: 1, game: "Valorant", stage: "Quarterfinal", time: "Today 18:30 IST", a: "TBP Phantoms", b: "Neon Rush", odds: "52/48" },
         { id: 2, game: "BGMI", stage: "Group B", time: "Today 20:00 IST", a: "Desert Wolves", b: "Crimson 5", odds: "60/40" },
@@ -71,7 +74,7 @@
         { pos: 5, team: "Nuke Ninjas", pts: 58, w: 18, l: 13 },
       ];
 
-      // India-esports links (snapshot). Swap this array with your API later.
+      // India esports headlines (snapshot; swap with API later)
       const curatedNews = [
         { tag: "BGMI", title: "BGMS 2025 Week 1 Day 7 — timings & points table", time: "Today", url: "https://www.sportstiger.com/esports/bgmi/bgms-2025-league-week-1-day-7-match-timings-points-table-groups-map-rotation-and-more", source: "SportsTiger" },
         { tag: "BGMI", title: "BGMI Masters Series 2025 Day 7 — schedule & livestream", time: "Today", url: "https://www.sportskeeda.com/bgmi/news-bgmi-masters-series-2025-league-day-7-livestream-groups-schedule", source: "Sportskeeda" },
@@ -80,11 +83,10 @@
         { tag: "BGMI", title: "Vasista Esports win Skyesports Championship 2025", time: "May 2025", url: "https://www.animationxpress.com/latest-news/vasista-esports-wins-iqoo-neo-10-skyesports-championship-2025-bgmi-tournament/", source: "AnimationXpress" },
       ];
 
-      // ——— pages ———
+      // -------- pages --------
       function Home() {
         return (
           <>
-            {/* hero */}
             <section className="relative overflow-hidden">
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(124,58,237,0.25),transparent_55%),radial-gradient(circle_at_80%_0%,rgba(6,182,212,0.25),transparent_55%)]"></div>
               <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 py-10 md:grid-cols-[1.2fr_1fr] md:py-16">
@@ -130,11 +132,10 @@
               </div>
             </section>
 
-            {/* trending */}
             <section id="trending" className="mx-auto max-w-7xl px-4 py-10">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-2xl font-bold">Trending in India</h2>
-                <a href="#news" className="text-sm text-cyan-300 hover:underline">More →</a>
+                <a href="#news" className="text-sm link">More →</a>
               </div>
               <div className="grid gap-4 md:grid-cols-3">
                 {curatedNews.slice(0,3).map((n, i) => (
@@ -143,7 +144,9 @@
                       <Pill>{n.tag}</Pill><span>{n.time}</span>
                     </div>
                     <h3 className="text-sm font-semibold">{n.title}</h3>
-                    <a className="mt-3 inline-block text-xs link" href={n.url} target="_blank" rel="noreferrer">Open on {n.source} →</a>
+                    <a className="mt-3 inline-block text-xs link" href={n.url} target="_blank" rel="noreferrer">
+                      Open on {n.source} →
+                    </a>
                   </article>
                 ))}
               </div>
@@ -157,7 +160,7 @@
           <section className="mx-auto max-w-7xl px-4 py-10">
             <h2 className="text-2xl font-bold mb-6">Upcoming Matches</h2>
             <div className="grid gap-4 md:grid-cols-3">
-              {matches.map((m) => (
+              {matches.map(m => (
                 <div key={m.id} className="rounded-2xl border border-white/10 bg-white/10 p-5">
                   <div className="mb-2 flex items-center justify-between text-xs text-white/70">
                     <span>{m.game} • {m.stage}</span>
@@ -198,7 +201,7 @@
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  {leaderboard.map((row) => (
+                  {leaderboard.map(row => (
                     <tr key={row.pos} className="hover:bg-white/5">
                       <td className="px-4 py-3 text-sm text-white/80">{row.pos}</td>
                       <td className="px-4 py-3 text-sm font-semibold">{row.team}</td>
@@ -209,6 +212,37 @@
                   ))}
                 </tbody>
               </table>
+            </div>
+          </section>
+        );
+      }
+
+      function Tournaments() {
+        return (
+          <section className="mx-auto max-w-7xl px-4 py-10">
+            <h2 className="text-2xl font-bold mb-2">Tournaments (India)</h2>
+            <p className="text-white/80 mb-6">BGMI Masters Series, BGMI Challengers, VCL South Asia, Skyesports Championship.</p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <article className="rounded-2xl border border-white/10 bg-white/10 p-4">
+                <h3 className="font-semibold">BGMI Masters Series 2025</h3>
+                <p className="text-sm text-white/80">League stage ongoing. Daily schedule & livestream.</p>
+                <a className="text-xs link" href="https://www.sportskeeda.com/bgmi/news-bgmi-masters-series-2025-league-day-7-livestream-groups-schedule" target="_blank" rel="noreferrer">Schedule →</a>
+              </article>
+              <article className="rounded-2xl border border-white/10 bg-white/10 p-4">
+                <h3 className="font-semibold">VCL South Asia 2025</h3>
+                <p className="text-sm text-white/80">Riot/NODWIN VALORANT B-tier. Winners head to Ascension.</p>
+                <a className="text-xs link" href="https://liquipedia.net/valorant/VCL/2025/South_Asia/Grand_Final" target="_blank" rel="noreferrer">Grand Final →</a>
+              </article>
+              <article className="rounded-2xl border border-white/10 bg-white/10 p-4">
+                <h3 className="font-semibold">Skyesports Championship 2025</h3>
+                <p className="text-sm text-white/80">LAN in Bangalore; Vasista Esports won BGMI title.</p>
+                <a className="text-xs link" href="https://www.animationxpress.com/latest-news/vasista-esports-wins-iqoo-neo-10-skyesports-championship-2025-bgmi-tournament/" target="_blank" rel="noreferrer">Coverage →</a>
+              </article>
+              <article className="rounded-2xl border border-white/10 bg-white/10 p-4">
+                <h3 className="font-semibold">BGMI Challengers Series</h3>
+                <p className="text-sm text-white/80">National qualifier feeding Masters Series.</p>
+                <a className="text-xs link" href="https://liquipedia.net/pubgmobile/BGMI_Challengers_Series" target="_blank" rel="noreferrer">About →</a>
+              </article>
             </div>
           </section>
         );
@@ -231,40 +265,6 @@
                 </article>
               ))}
             </div>
-            <p className="mt-4 text-xs text-white/50">
-              These are live links. Replace with your feed/API when ready.
-            </p>
-          </section>
-        );
-      }
-
-      function Tournaments() {
-        return (
-          <section className="mx-auto max-w-7xl px-4 py-10">
-            <h2 className="text-2xl font-bold mb-2">Tournaments (India)</h2>
-            <p className="text-white/80 mb-6">BGMI Masters Series, BGMI Challengers, VCL South Asia, Skyesports Championship.</p>
-            <div className="grid gap-4 md:grid-cols-2">
-              <article className="rounded-2xl border border-white/10 bg-white/10 p-4">
-                <h3 className="font-semibold">BGMI Masters Series 2025</h3>
-                <p className="text-sm text-white/80">League stage ongoing. Daily groups, map rotation, and livestreams available.</p>
-                <a className="text-xs link" href="https://www.sportskeeda.com/bgmi/news-bgmi-masters-series-2025-league-day-7-livestream-groups-schedule" target="_blank" rel="noreferrer">Schedule →</a>
-              </article>
-              <article className="rounded-2xl border border-white/10 bg-white/10 p-4">
-                <h3 className="font-semibold">VCL South Asia 2025</h3>
-                <p className="text-sm text-white/80">Riot/NODWIN’s B-tier VALORANT circuit. Winners qualify for Ascension.</p>
-                <a className="text-xs link" href="https://liquipedia.net/valorant/VCL/2025/South_Asia/Grand_Final" target="_blank" rel="noreferrer">Grand Final →</a>
-              </article>
-              <article className="rounded-2xl border border-white/10 bg-white/10 p-4">
-                <h3 className="font-semibold">Skyesports Championship 2025</h3>
-                <p className="text-sm text-white/80">LAN finale in Bangalore; Vasista Esports clinched BGMI title.</p>
-                <a className="text-xs link" href="https://www.animationxpress.com/latest-news/vasista-esports-wins-iqoo-neo-10-skyesports-championship-2025-bgmi-tournament/" target="_blank" rel="noreferrer">Coverage →</a>
-              </article>
-              <article className="rounded-2xl border border-white/10 bg-white/10 p-4">
-                <h3 className="font-semibold">BGMI Challengers Series</h3>
-                <p className="text-sm text-white/80">National qualifier feeding into Masters Series S4.</p>
-                <a className="text-xs link" href="https://liquipedia.net/pubgmobile/BGMI_Challengers_Series" target="_blank" rel="noreferrer">About →</a>
-              </article>
-            </div>
           </section>
         );
       }
@@ -275,7 +275,7 @@
             <h2 className="text-2xl font-bold mb-2">Creator Clubs</h2>
             <p className="text-white/80 mb-6">Spin up a monetized club with paid access, weekly quests, and coaching slots.</p>
             <div className="grid gap-4 md:grid-cols-3">
-              {["TBP Phantoms","Neon Rush","Crimson 5"].map((c) => (
+              {["TBP Phantoms","Neon Rush","Crimson 5"].map(c => (
                 <div key={c} className="rounded-2xl border border-white/10 bg-white/10 p-5">
                   <img src={LOGO_URL} alt="" className="h-10 w-auto mb-3 opacity-90" />
                   <div className="font-semibold">{c}</div>
@@ -290,23 +290,17 @@
 
       function Scrims() {
         return (
-          <section className="mx-auto max-w-7xl px-4 py-10 prose">
+          <section className="mx-auto max-w-7xl px-4 py-10">
             <h2 className="text-2xl font-bold">Scrims</h2>
-            <p className="text-white/80">Set up practice blocks with India-based teams. Auto-scoring, veto tools, and anti-smurf checks built in.</p>
-            <h3 className="text-lg">How it works</h3>
-            <ul className="list-disc pl-6 text-white/80">
-              <li>Create a scrim lobby and select title (BGMI, Valorant, CS2).</li>
-              <li>Pick best-of format, map pool, and server region (Mumbai/Chennai/Delhi).</li>
-              <li>Share lobby link. Teams join, ready-up, and TBP records results.</li>
-            </ul>
+            <p className="text-white/80">Set up India-region practice blocks. Auto-scoring, veto tools, anti-smurf checks.</p>
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               <div className="rounded-2xl border border-white/10 bg-white/10 p-4">
-                <h4 className="font-semibold">Tonight • 21:00 IST</h4>
-                <p className="text-sm text-white/70">Valorant BO3 • Mumbai • Map veto online</p>
+                <h3 className="font-semibold">Tonight • 21:00 IST</h3>
+                <p className="text-sm text-white/70">Valorant BO3 • Mumbai • Map veto</p>
                 <button className="mt-2 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold hover:bg-white/10">Join Lobby</button>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/10 p-4">
-                <h4 className="font-semibold">Tomorrow • 19:30 IST</h4>
+                <h3 className="font-semibold">Tomorrow • 19:30 IST</h3>
                 <p className="text-sm text-white/70">BGMI T3 scrim • Sanhok/Erangel • 16 squads</p>
                 <button className="mt-2 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold hover:bg-white/10">Request Slot</button>
               </div>
@@ -315,80 +309,39 @@
         );
       }
 
-      function APIPage() {
-        return (
-          <section className="mx-auto max-w-7xl px-4 py-10 prose">
-            <h2 className="text-2xl font-bold">API & Webhooks</h2>
-            <p className="text-white/80">Pull match cards, standings, and club stats into your app. These are mock endpoints; swap with your backend later.</p>
-            <h3>REST</h3>
-            <pre className="rounded-xl bg-black/40 p-4 overflow-x-auto text-xs"><code>GET https://api.thebyteplay.in/v1/matches?region=IN
-GET https://api.thebyteplay.in/v1/leaderboard?circuit=tbp
-GET https://api.thebyteplay.in/v1/news?country=IN</code></pre>
-            <h3>Webhook Event (sample)</h3>
-            <pre className="rounded-xl bg-black/40 p-4 overflow-x-auto text-xs"><code>{`{ 
-  "type": "match.updated",
-  "data": { "id": "m_123", "score": "13-11", "status": "final" },
-  "ts": 1735152000
-}`}</code></pre>
-            <p className="text-white/60 text-xs">Note: endpoints above are placeholders for demo.</p>
-          </section>
-        );
-      }
-
       function Terms() {
         return (
-          <section className="mx-auto max-w-7xl px-4 py-10 prose">
+          <section className="mx-auto max-w-7xl px-4 py-10">
             <h2 className="text-2xl font-bold">Terms</h2>
-            <p className="text-white/80">By using TheBytePlay you agree to fair-play, lawful use, and basic community etiquette. Do not post illegal content or engage in harassment, cheating, or fraud.</p>
-            <h3>Usage</h3>
-            <ul className="list-disc pl-6 text-white/80">
-              <li>Match and player data is provided “as is” for information only.</li>
-              <li>Commercial use requires written permission.</li>
-              <li>We may limit or suspend accounts that abuse the platform.</li>
-            </ul>
+            <p className="text-white/80">By using TheBytePlay you agree to fair-play, lawful use, and basic community etiquette.</p>
           </section>
         );
       }
 
       function Privacy() {
         return (
-          <section className="mx-auto max-w-7xl px-4 py-10 prose">
+          <section className="mx-auto max-w-7xl px-4 py-10">
             <h2 className="text-2xl font-bold">Privacy</h2>
-            <p className="text-white/80">We store minimal account details to run clubs and tournaments. Cookies are used for session security and analytics.</p>
-            <h3>Data</h3>
-            <ul className="list-disc pl-6 text-white/80">
-              <li>Account: email, display name, club memberships.</li>
-              <li>Gameplay stats you upload or connect via APIs.</li>
-              <li>We don’t sell personal data. You can request deletion anytime.</li>
-            </ul>
+            <p className="text-white/80">We store minimal account details to run clubs and tournaments. You can request deletion anytime.</p>
           </section>
         );
       }
 
       function Community() {
         return (
-          <section className="mx-auto max-w-7xl px-4 py-10 prose">
+          <section className="mx-auto max-w-7xl px-4 py-10">
             <h2 className="text-2xl font-bold">Community Guidelines</h2>
             <p className="text-white/80">Keep it competitive, not toxic. Respect players, staff, and creators.</p>
-            <ul className="list-disc pl-6 text-white/80">
-              <li>No hate speech, slurs, doxxing, or targeted harassment.</li>
-              <li>No cheating, smurfing in restricted ladders, or match fixing.</li>
-              <li>Use proper team tags and sponsor disclosures in events.</li>
-            </ul>
           </section>
         );
       }
 
-      // layout
+      // -------- layout --------
       function App() {
-        const [route] = useHashRoute();
-        const NavLink = ({ to, children }) => (
-          <a href={`#${to}`} className="text-sm text-white/80 hover:text-white">{children}</a>
-        );
+        const route = useHashRoute();
 
         return (
           <div className="min-h-screen bg-[#0B0F1A] text-white">
-            {/* header */}
             <header className="sticky top-0 z-40 border-b border-white/5 bg-[#0B0F1A]/80 backdrop-blur">
               <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-3">
@@ -403,19 +356,16 @@ GET https://api.thebyteplay.in/v1/news?country=IN</code></pre>
                   <NavLink to="home">Home</NavLink>
                   <NavLink to="matches">Matches</NavLink>
                   <NavLink to="leaderboard">Leaderboard</NavLink>
-                  <NavLink to "scrims">Scrims</NavLink>
+                  <NavLink to="scrims">Scrims</NavLink>
                   <NavLink to="tournaments">Tournaments</NavLink>
                   <NavLink to="news">News</NavLink>
                   <NavLink to="clubs">Clubs</NavLink>
-                  <NavLink to="api">API</NavLink>
                 </nav>
                 <div className="flex items-center gap-2">
                   <a href="#news" className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold hover:bg-white/10">India</a>
                   <a href="#tournaments" className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-gray-900 hover:-translate-y-0.5">Launch App</a>
                 </div>
               </div>
-
-              {/* ticker */}
               <div className="border-t border-white/5 bg-black/30">
                 <div className="mx-auto flex max-w-7xl items-center gap-4 overflow-hidden px-4 py-2 text-xs">
                   <span className="text-cyan-300">●</span>
@@ -432,7 +382,6 @@ GET https://api.thebyteplay.in/v1/news?country=IN</code></pre>
               </div>
             </header>
 
-            {/* router view */}
             <main>
               {route === "home" && <Home />}
               {route === "matches" && <Matches />}
@@ -441,26 +390,25 @@ GET https://api.thebyteplay.in/v1/news?country=IN</code></pre>
               {route === "tournaments" && <Tournaments />}
               {route === "news" && <News />}
               {route === "clubs" && <Clubs />}
-              {route === "api" && <APIPage />}
               {route === "terms" && <Terms />}
               {route === "privacy" && <Privacy />}
               {route === "community" && <Community />}
             </main>
 
-            {/* partners */}
             <section className="border-t border-white/5 bg-white/5">
               <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-10 px-4 py-8 opacity-80">
-                {["Valorant","BGMI","CS2","Dota 2","Free Fire"].map((g)=> (
+                {["Valorant","BGMI","CS2","Dota 2","Free Fire"].map(g => (
                   <div key={g} className="text-xs tracking-widest text-white/70">SUPPORTED: {g}</div>
                 ))}
               </div>
             </section>
 
-            {/* footer */}
             <footer className="border-t border-white/5">
               <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 md:grid-cols-4">
                 <div>
-                  <div className="mb-3 flex items-center gap-2"><img src={LOGO_URL} className="h-8 w-auto" alt=""/> <span className="font-semibold">TheBytePlay</span></div>
+                  <div className="mb-3 flex items-center gap-2">
+                    <img src={LOGO_URL} className="h-8 w-auto" alt=""/> <span className="font-semibold">TheBytePlay</span>
+                  </div>
                   <p className="text-sm text-white/70">Esports analytics, clubs, and tournaments — in one hub.</p>
                 </div>
                 <div>
@@ -478,7 +426,6 @@ GET https://api.thebyteplay.in/v1/news?country=IN</code></pre>
                   <ul className="space-y-1 text-sm text-white/70">
                     <li><a href="#scrims" className="hover:text-white">Scrims</a></li>
                     <li><a href="#clubs" className="hover:text-white">Clubs</a></li>
-                    <li><a href="#api" className="hover:text-white">API & Webhooks</a></li>
                   </ul>
                 </div>
                 <div>
@@ -490,14 +437,16 @@ GET https://api.thebyteplay.in/v1/news?country=IN</code></pre>
                   </ul>
                 </div>
               </div>
-              <div className="border-t border-white/5 py-4 text-center text-xs text-white/60">© <span id="y"></span> TheBytePlay. All rights reserved.</div>
+              <div className="border-t border-white/5 py-4 text-center text-xs text-white/60">
+                © <span id="y"></span> TheBytePlay. All rights reserved.
+              </div>
             </footer>
           </div>
         );
       }
 
       ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-      document.getElementById('y').textContent = new Date().getFullYear();
+      document.getElementById("y").textContent = new Date().getFullYear();
     </script>
   </body>
 </html>
